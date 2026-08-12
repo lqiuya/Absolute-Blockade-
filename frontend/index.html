@@ -4,241 +4,827 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="ablock - 容器运行时安全代理，基于Falco的实时威胁检测与自动响应系统">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#0a0a0a">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <title>ablock | 容器安全代理</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background: #050810;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      overflow-x: hidden;
+      background: #0a0a0a;
+      font-family: 'Microsoft YaHei', 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
     }
 
-    #app { min-height: 100vh; }
+    #app { min-height: 100vh; position: relative; }
 
-    /* ========== Loading 动画 ========== */
-    .loading {
+    /* ========== 入场特效 ========== */
+    .intro-overlay {
       position: fixed;
       inset: 0;
+      background: #000;
+      z-index: 9999;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: #050810;
-      z-index: 9999;
-      transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .loading.hidden { 
-      opacity: 0; 
-      pointer-events: none; 
-    }
-
-    /* 核心六边形盾徽 */
-    .loading-shield {
-      width: 72px;
-      height: 72px;
-      position: relative;
-    }
-
-    .loading-shield svg {
-      width: 100%;
-      height: 100%;
-    }
-
-    .shield-hex {
-      stroke: #3b82f6;
-      stroke-width: 2;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      animation: hexPulse 2s ease-in-out infinite;
-    }
-
-    .shield-inner {
-      stroke: #60a5fa;
-      stroke-width: 1.5;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      animation: hexPulse 2s ease-in-out 0.3s infinite;
-    }
-
-    .shield-dot {
-      fill: #3b82f6;
-      animation: dotBlink 1.5s ease-in-out infinite;
-    }
-
-    @keyframes hexPulse {
-      0%, 100% { 
-        opacity: 1; 
-        transform-origin: center;
-        transform: scale(1); 
-      }
-      50% { 
-        opacity: 0.5; 
-        transform: scale(0.92); 
-      }
-    }
-
-    @keyframes dotBlink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
-
-    /* 扫描线 */
-    .scan-line {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 120px;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.6), transparent);
-      transform: translate(-50%, -50%);
-      animation: scanSweep 2.5s ease-in-out infinite;
-    }
-
-    @keyframes scanSweep {
-      0% { transform: translate(-50%, -50%) rotate(0deg); opacity: 0; }
-      20% { opacity: 1; }
-      80% { opacity: 1; }
-      100% { transform: translate(-50%, -50%) rotate(360deg); opacity: 0; }
-    }
-
-    /* 文字区域 */
-    .loading-text {
-      margin-top: 32px;
-      color: #64748b;
-      font-size: 13px;
-      letter-spacing: 3px;
-      font-weight: 500;
-      text-transform: uppercase;
-    }
-
-    .loading-brand {
-      margin-top: 8px;
-      color: #94a3b8;
-      font-size: 11px;
-      letter-spacing: 6px;
-      font-weight: 400;
-    }
-
-    .loading-dots::after {
-      content: '';
-      animation: dots 1.5s steps(4, end) infinite;
-    }
-
-    @keyframes dots {
-      0% { content: ''; }
-      25% { content: '.'; }
-      50% { content: '..'; }
-      75% { content: '...'; }
-    }
-
-    /* 状态指示器 */
-    .loading-status {
-      margin-top: 20px;
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .status-bar {
-      width: 32px;
-      height: 3px;
-      border-radius: 2px;
-      background: #1e293b;
       overflow: hidden;
     }
 
-    .status-bar-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #3b82f6, #60a5fa);
-      border-radius: 2px;
-      animation: statusFill 2s ease-in-out infinite;
+    .intro-overlay.fade-out {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease-out;
     }
 
-    .status-bar:nth-child(2) .status-bar-fill { animation-delay: 0.2s; }
-    .status-bar:nth-child(3) .status-bar-fill { animation-delay: 0.4s; }
-    .status-bar:nth-child(4) .status-bar-fill { animation-delay: 0.6s; }
-    .status-bar:nth-child(5) .status-bar-fill { animation-delay: 0.8s; }
-
-    @keyframes statusFill {
-      0% { width: 0%; opacity: 0.3; }
-      50% { width: 100%; opacity: 1; }
-      100% { width: 100%; opacity: 0.3; }
-    }
-
-    /* 底部装饰线 */
-    .loading-footer {
+    #particle-canvas {
       position: absolute;
-      bottom: 40px;
-      color: #334155;
+      inset: 0;
+      z-index: 1;
+    }
+
+    .scan-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(255, 0, 0, 0.03) 2px, rgba(255, 0, 0, 0.03) 4px
+      );
+      animation: scanMove 6s linear infinite;
+    }
+
+    @keyframes scanMove {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 100vh; }
+    }
+
+    /* 标题区域 - 整体容器 */
+    .intro-title-area {
+      position: relative;
+      z-index: 3;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      opacity: 0;
+      transform: scale(0.15);
+      animation: titleAreaReveal 3s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+    }
+
+    /* 整体容器：从小变大，丝滑 */
+    @keyframes titleAreaReveal {
+      0% { opacity: 0; transform: scale(0.15); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* ABLOCK */
+    .intro-main-title {
+      font-size: clamp(60px, 13vw, 150px);
+      font-weight: 900;
+      color: #ff1a1a;
+      text-shadow:
+        0 0 10px rgba(255, 26, 26, 0.6),
+        0 0 40px rgba(255, 26, 26, 0.3),
+        0 0 80px rgba(255, 26, 26, 0.15);
+      font-family: 'Arial Black', 'Impact', sans-serif;
+      white-space: nowrap;
+      letter-spacing: 0px;
+      animation: titleSpacing 3s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+    }
+
+    @keyframes titleSpacing {
+      0% { letter-spacing: 0px; }
+      100% { letter-spacing: 14px; }
+    }
+
+    /* 绝对封锁 */
+    .intro-sub-title {
+      font-size: clamp(24px, 5vw, 40px);
+      font-weight: 300;
+      color: #ff4444;
+      margin-top: 10px;
+      text-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
+      white-space: nowrap;
+      letter-spacing: 0px;
+      animation: subSpacing 3s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+    }
+
+    @keyframes subSpacing {
+      0% { letter-spacing: 0px; opacity: 0.6; }
+      100% { letter-spacing: 18px; opacity: 1; }
+    }
+
+    /* 线 - 从中心向两边展开 */
+    .cyber-line {
+      width: 0px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #ff1a1a, #ff4444, #ff1a1a, transparent);
+      margin-top: 24px;
+      position: relative;
+      animation: lineExpand 3s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+    }
+
+    .cyber-line::before,
+    .cyber-line::after {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #ff1a1a;
+      border-radius: 50%;
+      top: 50%;
+      transform: translateY(-50%);
+      box-shadow: 0 0 12px #ff1a1a, 0 0 24px rgba(255, 26, 26, 0.5);
+    }
+
+    .cyber-line::before { left: 0; }
+    .cyber-line::after { right: 0; }
+
+    @keyframes lineExpand {
+      0% { width: 0px; opacity: 0; }
+      100% { width: 400px; opacity: 1; }
+    }
+
+    /* 赛博风闪 - 文字扭曲 */
+    .cyber-glitch {
+      animation: glitchFlash 0.15s ease-out 3.2s;
+    }
+
+    @keyframes glitchFlash {
+      0% { filter: brightness(1); transform: skew(0deg); }
+      20% { filter: brightness(3); transform: skew(-8deg) scale(1.02); }
+      40% { filter: brightness(0.2); transform: skew(6deg) scale(0.98); }
+      60% { filter: brightness(2); transform: skew(-4deg) scale(1.01); }
+      80% { filter: brightness(0.5); transform: skew(2deg); }
+      100% { filter: brightness(1); transform: skew(0deg); }
+    }
+
+    /* 底部状态 */
+    .intro-status {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+      color: #ff3333;
       font-size: 10px;
+      letter-spacing: 5px;
+      opacity: 0;
+      animation: fadeIn 0.5s ease-out 1.5s forwards;
+    }
+
+    .intro-status::before { content: '['; margin-right: 6px; color: #ff1a1a; }
+    .intro-status::after { content: ']'; margin-left: 6px; color: #ff1a1a; }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 0.6; }
+    }
+
+    /* 角落装饰 */
+    .corner-deco {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(255, 26, 26, 0.25);
+      z-index: 2;
+    }
+    .corner-deco.tl { top: 30px; left: 30px; border-right: none; border-bottom: none; }
+    .corner-deco.tr { top: 30px; right: 30px; border-left: none; border-bottom: none; }
+    .corner-deco.bl { bottom: 30px; left: 30px; border-right: none; border-top: none; }
+    .corner-deco.br { bottom: 30px; right: 30px; border-left: none; border-top: none; }
+
+    /* ========== 主界面 ========== */
+    .main-interface {
+      position: fixed;
+      inset: 0;
+      background: #0a0a0a;
+      z-index: 1;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease-out;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .main-interface.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .top-bar {
+      height: 56px;
+      background: linear-gradient(180deg, #111 0%, #0a0a0a 100%);
+      border-bottom: 1px solid rgba(255, 30, 30, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .top-bar::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 30, 30, 0.4), transparent);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #e8e8e8;
+      letter-spacing: 3px;
+      font-family: 'Arial Black', 'Impact', sans-serif;
+    }
+
+    .header-title span { color: #ff3333; }
+
+    .eye-icon {
+      width: 28px;
+      height: 28px;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .eye-icon:hover { transform: scale(1.1); }
+
+    .eye-icon svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 0 4px rgba(255, 50, 50, 0.5));
+    }
+
+    .eye-icon .eye-pupil {
+      animation: eyePulse 3s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    @keyframes eyePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .notice-box {
+      background: rgba(255, 30, 30, 0.06);
+      border: 1px solid rgba(255, 50, 50, 0.2);
+      border-radius: 6px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .notice-box::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, #ff3333, #ff6666, #ff3333);
+      opacity: 0.6;
+    }
+
+    .notice-box:hover {
+      background: rgba(255, 30, 30, 0.1);
+      border-color: rgba(255, 50, 50, 0.4);
+      box-shadow: 0 0 15px rgba(255, 30, 30, 0.1);
+    }
+
+    .notice-icon {
+      width: 16px;
+      height: 16px;
+      color: #ff4444;
+      flex-shrink: 0;
+    }
+
+    .notice-text {
+      font-size: 12px;
+      color: #b0b0b0;
+      line-height: 1.4;
+      max-width: 320px;
+    }
+
+    .notice-popup {
+      position: absolute;
+      top: 64px;
+      right: 24px;
+      width: 380px;
+      background: #111;
+      border: 1px solid rgba(255, 50, 50, 0.25);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 30, 30, 0.05);
+      opacity: 0;
+      transform: translateY(-10px);
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 100;
+    }
+
+    .notice-popup.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .notice-popup-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 50, 50, 0.1);
+    }
+
+    .notice-popup-header span {
+      font-size: 13px;
+      font-weight: 600;
+      color: #ff5555;
+      letter-spacing: 1px;
+    }
+
+    .notice-popup-body {
+      font-size: 13px;
+      color: #aaa;
+      line-height: 1.7;
+    }
+
+    .notice-popup-body p { margin-bottom: 8px; }
+
+    .notice-popup-body .highlight {
+      color: #ff6666;
+      font-weight: 500;
+    }
+
+    .notice-popup-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #666;
+      transition: color 0.2s;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .notice-popup-close:hover { color: #ff4444; }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 30, 30, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 30, 30, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .content-area {
+      flex: 1;
+      position: relative;
+      z-index: 1;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .placeholder-card {
+      background: rgba(20, 20, 20, 0.8);
+      border: 1px solid rgba(255, 50, 50, 0.1);
+      border-radius: 12px;
+      padding: 48px 64px;
+      text-align: center;
+      max-width: 600px;
+    }
+
+    .placeholder-card h2 {
+      font-size: 24px;
+      color: #e0e0e0;
+      margin-bottom: 12px;
       letter-spacing: 2px;
     }
 
-    .loading-footer::before,
-    .loading-footer::after {
-      content: '';
+    .placeholder-card p {
+      font-size: 14px;
+      color: #888;
+      line-height: 1.6;
+    }
+
+    .placeholder-card .status-dot {
       display: inline-block;
-      width: 40px;
-      height: 1px;
-      background: #1e293b;
-      vertical-align: middle;
-      margin: 0 12px;
+      width: 8px;
+      height: 8px;
+      background: #ff3333;
+      border-radius: 50%;
+      margin-right: 8px;
+      box-shadow: 0 0 8px #ff3333;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .sidebar {
+      width: 220px;
+      background: rgba(10, 10, 10, 0.95);
+      border-right: 1px solid rgba(255, 30, 30, 0.08);
+      padding: 20px 0;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .sidebar-item {
+      padding: 12px 24px;
+      color: #888;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 2px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      user-select: none;
+    }
+
+    .sidebar-item:hover {
+      background: rgba(255, 30, 30, 0.05);
+      color: #ccc;
+      border-left-color: rgba(255, 50, 50, 0.4);
+    }
+
+    .sidebar-item.active {
+      background: rgba(255, 30, 30, 0.08);
+      color: #ff5555;
+      border-left-color: #ff3333;
+    }
+
+    .sidebar-item .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #333;
+    }
+
+    .sidebar-item.active .dot {
+      background: #ff3333;
+      box-shadow: 0 0 6px #ff3333;
+    }
+
+    .bottom-bar {
+      height: 32px;
+      background: #080808;
+      border-top: 1px solid rgba(255, 30, 30, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 11px;
+      color: #555;
+      flex-shrink: 0;
+    }
+
+    .bottom-bar .left-info { display: flex; gap: 16px; }
+    .bottom-bar .right-info { display: flex; gap: 12px; align-items: center; }
+    .bottom-bar .version { color: #ff4444; font-weight: 600; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .notice-box { max-width: 200px; }
+      .notice-text { display: none; }
+      .header-title { font-size: 14px; }
     }
   </style>
 <base target="_blank">
 </head>
 <body>
   <div id="app">
-    <div class="loading" id="loading">
-      <!-- 盾徽 -->
-      <div class="loading-shield">
-        <svg viewBox="0 0 72 72">
-          <!-- 外六边形 -->
-          <polygon class="shield-hex" 
-            points="36,4 64,20 64,52 36,68 8,52 8,20" />
-          <!-- 内六边形 -->
-          <polygon class="shield-inner" 
-            points="36,14 56,26 56,46 36,58 16,46 16,26" />
-          <!-- 中心点 -->
-          <circle class="shield-dot" cx="36" cy="36" r="3" />
-        </svg>
-        <!-- 扫描线 -->
-        <div class="scan-line"></div>
+    <!-- 入场特效 -->
+    <div class="intro-overlay" id="introOverlay">
+      <canvas id="particle-canvas"></canvas>
+      <div class="scan-overlay"></div>
+      <div class="corner-deco tl"></div>
+      <div class="corner-deco tr"></div>
+      <div class="corner-deco bl"></div>
+      <div class="corner-deco br"></div>
+
+      <!-- 三个一起出现，一起展开 -->
+      <div class="intro-title-area" id="introTitleArea">
+        <div class="intro-main-title">ABLOCK</div>
+        <div class="intro-sub-title">绝对封锁</div>
+        <div class="cyber-line"></div>
       </div>
 
-      <!-- 文字 -->
-      <div class="loading-text">ablock 初始化中<span class="loading-dots"></span></div>
-      <div class="loading-brand">CONTAINER SECURITY AGENT</div>
+      <div class="intro-status">SYSTEM INITIALIZING</div>
+    </div>
 
-      <!-- 状态条 -->
-      <div class="loading-status">
-        <div class="status-bar"><div class="status-bar-fill"></div></div>
-        <div class="status-bar"><div class="status-bar-fill"></div></div>
-        <div class="status-bar"><div class="status-bar-fill"></div></div>
-        <div class="status-bar"><div class="status-bar-fill"></div></div>
-        <div class="status-bar"><div class="status-bar-fill"></div></div>
+    <!-- 主界面 -->
+    <div class="main-interface" id="mainInterface">
+      <div class="top-bar">
+        <div class="header-left">
+          <div class="header-title">ABLOCK<span>-</span>绝对封锁</div>
+          <div class="eye-icon" title="实时监控中">
+            <svg viewBox="0 0 28 28" fill="none">
+              <path d="M14 4C8 4 3 8 2 14c1 6 6 10 12 10s11-4 12-10C25 8 20 4 14 4z"
+                fill="none" stroke="#ff3333" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="14" cy="14" r="5" fill="none" stroke="#ff4444" stroke-width="0.8" opacity="0.6"/>
+              <circle class="eye-pupil" cx="14" cy="14" r="2.5" fill="#ff1a1a"/>
+              <circle cx="15.5" cy="12.5" r="0.8" fill="#ff8888" opacity="0.8"/>
+              <path d="M8 14h3M17 14h3M14 8v3M14 17v3" stroke="#ff2222" stroke-width="0.3" opacity="0.3"/>
+            </svg>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="notice-box" id="noticeBox">
+            <svg class="notice-icon" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12a1 1 0 110-2 1 1 0 010 2zm0-3a1 1 0 01-1-1V5a1 1 0 012 0v4a1 1 0 01-1 1z"/>
+            </svg>
+            <span class="notice-text">由于特殊原因程序无法在我电脑上面执行，如果你愿意的话，可以提供意见，感谢</span>
+          </div>
+        </div>
       </div>
 
-      <!-- 底部 -->
-      <div class="loading-footer">v2.0.0</div>
+      <div class="notice-popup" id="noticePopup">
+        <div class="notice-popup-close" id="noticeClose">&times;</div>
+        <div class="notice-popup-header">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="#ff5555">
+            <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12a1 1 0 110-2 1 1 0 010 2zm0-3a1 1 0 01-1-1V5a1 1 0 012 0v4a1 1 0 01-1 1z"/>
+          </svg>
+          <span>开发者提示</span>
+        </div>
+        <div class="notice-popup-body">
+          <p>由于<span class="highlight">特殊原因程序无法在我电脑上面执行</span>，如果你愿意的话，可以提供意见，感谢。</p>
+          <p style="margin-top:8px; color:#777; font-size:12px;">当前版本处于早期开发阶段，部分功能可能存在不稳定情况。欢迎通过 GitHub Issues 或邮件反馈问题与建议。</p>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <div class="bg-grid"></div>
+        <div class="sidebar">
+          <div class="sidebar-item active" data-page="overview">
+            <span class="dot"></span><span>总览面板</span>
+          </div>
+          <div class="sidebar-item" data-page="threat">
+            <span class="dot"></span><span>威胁检测</span>
+          </div>
+          <div class="sidebar-item" data-page="logs">
+            <span class="dot"></span><span>事件日志</span>
+          </div>
+          <div class="sidebar-item" data-page="rules">
+            <span class="dot"></span><span>规则配置</span>
+          </div>
+          <div class="sidebar-item" data-page="settings">
+            <span class="dot"></span><span>系统设置</span>
+          </div>
+        </div>
+        <div class="content-area" id="contentArea">
+          <div class="placeholder-card" id="pageOverview">
+            <h2><span class="status-dot"></span>系统就绪</h2>
+            <p>ablock 容器安全代理已启动<br>等待 Falco 事件流接入...</p>
+          </div>
+          <div class="placeholder-card" id="pageThreat" style="display:none;">
+            <h2><span class="status-dot"></span>威胁检测</h2>
+            <p>实时威胁检测引擎运行中<br>监控容器运行时异常行为...</p>
+          </div>
+          <div class="placeholder-card" id="pageLogs" style="display:none;">
+            <h2><span class="status-dot"></span>事件日志</h2>
+            <p>安全事件日志聚合中心<br>暂无异常事件记录...</p>
+          </div>
+          <div class="placeholder-card" id="pageRules" style="display:none;">
+            <h2><span class="status-dot"></span>规则配置</h2>
+            <p>自定义检测规则引擎<br>当前加载默认规则集...</p>
+          </div>
+          <div class="placeholder-card" id="pageSettings" style="display:none;">
+            <h2><span class="status-dot"></span>系统设置</h2>
+            <p>ablock 全局配置面板<br>版本 v0.2.0-alpha...</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-bar">
+        <div class="left-info">
+          <span>STATUS: <span style="color:#ff4444;">ACTIVE</span></span>
+          <span>FALCO: <span style="color:#ffaa44;">STANDBY</span></span>
+          <span>eBPF: <span style="color:#ff4444;">DISABLED</span></span>
+        </div>
+        <div class="right-info">
+          <span class="version">v0.2.0-alpha</span>
+          <span>|</span>
+          <span>Rust + Falco</span>
+        </div>
+      </div>
     </div>
   </div>
 
   <script type="module" src="/src/main.js"></script>
   <script>
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        const el = document.getElementById('loading');
-        if (el) el.classList.add('hidden');
-      }, 300);
+    // 粒子系统
+    (function() {
+      const canvas = document.getElementById('particle-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      let running = true;
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      class Particle {
+        constructor() { this.reset(); }
+        reset() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.size = Math.random() * 2 + 0.5;
+          this.speedX = (Math.random() - 0.5) * 1.5;
+          this.speedY = (Math.random() - 0.5) * 1.5;
+          this.opacity = Math.random() * 0.6 + 0.2;
+          this.life = Math.random() * 100 + 50;
+          this.maxLife = this.life;
+          const reds = ['#ff1a1a', '#ff3333', '#ff4444', '#ff5555', '#cc0000', '#990000'];
+          this.color = reds[Math.floor(Math.random() * reds.length)];
+        }
+        update() {
+          this.x += this.speedX;
+          this.y += this.speedY;
+          this.life--;
+          if (this.life <= 0 || this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+            this.reset();
+          }
+        }
+        draw() {
+          const lifeRatio = this.life / this.maxLife;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fillStyle = this.color;
+          ctx.globalAlpha = this.opacity * lifeRatio;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      const particleCount = Math.min(100, Math.floor((canvas.width * canvas.height) / 10000));
+      for (let i = 0; i < particleCount; i++) particles.push(new Particle());
+
+      function drawConnections() {
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 120) {
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = '#ff1a1a';
+              ctx.globalAlpha = (1 - dist / 120) * 0.15;
+              ctx.lineWidth = 0.5;
+              ctx.stroke();
+              ctx.globalAlpha = 1;
+            }
+          }
+        }
+      }
+
+      function animate() {
+        if (!running) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(function(p) { p.update(); p.draw(); });
+        drawConnections();
+        requestAnimationFrame(animate);
+      }
+      animate();
+
+      setTimeout(function() { running = false; }, 3500);
+    })();
+
+    // 入场动画控制
+    window.addEventListener('load', function() {
+      const introOverlay = document.getElementById('introOverlay');
+      const introTitleArea = document.getElementById('introTitleArea');
+      const mainInterface = document.getElementById('mainInterface');
+
+      // 3.2秒：赛博风闪一下（文字扭曲）
+      setTimeout(function() {
+        introTitleArea.classList.add('cyber-glitch');
+      }, 3200);
+
+      // 3.4秒：overlay淡出，主界面显示
+      setTimeout(function() {
+        introOverlay.classList.add('fade-out');
+        mainInterface.classList.add('visible');
+      }, 3400);
+
+      // 4.1秒：完全移除overlay
+      setTimeout(function() {
+        introOverlay.style.display = 'none';
+      }, 4100);
     });
+
+    // 提示框交互
+    (function() {
+      const noticeBox = document.getElementById('noticeBox');
+      const noticePopup = document.getElementById('noticePopup');
+      const noticeClose = document.getElementById('noticeClose');
+      let popupVisible = false;
+
+      function togglePopup() {
+        popupVisible = !popupVisible;
+        noticePopup.classList.toggle('show', popupVisible);
+      }
+
+      function closePopup() {
+        popupVisible = false;
+        noticePopup.classList.remove('show');
+      }
+
+      noticeBox.addEventListener('click', function(e) {
+        e.stopPropagation();
+        togglePopup();
+      });
+
+      noticeClose.addEventListener('click', function(e) {
+        e.stopPropagation();
+        closePopup();
+      });
+
+      document.addEventListener('click', function(e) {
+        if (popupVisible && !noticePopup.contains(e.target) && !noticeBox.contains(e.target)) {
+          closePopup();
+        }
+      });
+    })();
+
+    // 侧边栏切换
+    (function() {
+      const sidebarItems = document.querySelectorAll('.sidebar-item');
+      const pages = {
+        'overview': document.getElementById('pageOverview'),
+        'threat': document.getElementById('pageThreat'),
+        'logs': document.getElementById('pageLogs'),
+        'rules': document.getElementById('pageRules'),
+        'settings': document.getElementById('pageSettings')
+      };
+
+      sidebarItems.forEach(function(item) {
+        item.addEventListener('click', function() {
+          const pageKey = this.getAttribute('data-page');
+          if (!pageKey) return;
+
+          sidebarItems.forEach(function(si) { si.classList.remove('active'); });
+          this.classList.add('active');
+
+          Object.values(pages).forEach(function(p) { if(p) p.style.display = 'none'; });
+          if (pages[pageKey]) pages[pageKey].style.display = 'block';
+        });
+      });
+    })();
   </script>
 </body>
 </html>
