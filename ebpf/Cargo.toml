@@ -1,0 +1,13 @@
+[package]
+name = "ablock-ebpf"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+aya-ebpf = "0.2.1"
+aya-ebpf-bindings = "0.2.0"
+aya-log-ebpf = "0.2.0"
+
+[[bin]]
+name = "ablock"
+path = "src/liqiu2.rs"

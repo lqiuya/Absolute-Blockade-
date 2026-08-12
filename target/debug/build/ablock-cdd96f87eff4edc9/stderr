@@ -1,0 +1,138 @@
+   Compiling serde_core v1.0.229
+   Compiling syn v3.0.3
+   Compiling syn v2.0.119
+   Compiling core v0.0.0 (/home/liqiu/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core)
+   Compiling thiserror-impl v2.0.20
+   Compiling serde_derive v1.0.229
+   Compiling semver v1.0.28
+   Compiling cargo-platform v0.3.3
+   Compiling camino v1.2.5
+   Compiling serde_json v1.0.151
+   Compiling rustc_version v0.4.1
+   Compiling thiserror v2.0.20
+   Compiling proc-macro2-diagnostics v0.10.1
+   Compiling num_enum_derive v0.7.6
+   Compiling aya-ebpf-macros v0.2.0
+   Compiling num_enum v0.7.6
+   Compiling aya-log-common v0.2.0
+   Compiling aya-log-parser v0.2.0
+   Compiling aya-log-ebpf-macros v0.2.0
+   Compiling serde v1.0.229
+   Compiling cargo_metadata v0.23.1
+   Compiling aya-build v0.2.0
+   Compiling aya-ebpf-cty v0.3.0
+   Compiling aya-ebpf-bindings v0.2.0
+   Compiling aya-ebpf v0.2.1
+   Compiling compiler_builtins v0.1.160 (/home/liqiu/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/compiler-builtins/compiler-builtins)
+   Compiling aya-log-ebpf v0.2.0
+   Compiling ablock-ebpf v0.1.0 (/home/liqiu/rust/ablock-semi-finished/ebpf)
+warning: function `LQ11947_check_pid_whitelist` should have a snake case name
+   --> src/liqiu2.rs:283:8
+    |
+283 | pub fn LQ11947_check_pid_whitelist(pid: u32) -> bool {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `lq11947_check_pid_whitelist`
+    |
+    = note: `#[warn(non_snake_case)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: function `LQ33826_send_event` should have a snake case name
+   --> src/liqiu2.rs:286:8
+    |
+286 | pub fn LQ33826_send_event(ctx: &TracePointContext, event: &AblockEvent) {
+    |        ^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `lq33826_send_event`
+
+warning: function `LQ77281_is_rule_enabled` should have a snake case name
+   --> src/liqiu2.rs:289:8
+    |
+289 | pub fn LQ77281_is_rule_enabled(rule_index: u32) -> bool {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `lq77281_is_rule_enabled`
+
+warning: function `LQ55112_is_emergency_mode` should have a snake case name
+   --> src/liqiu2.rs:296:8
+    |
+296 | pub fn LQ55112_is_emergency_mode() -> bool {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `lq55112_is_emergency_mode`
+
+warning: function `LQ66190_increment_stat` should have a snake case name
+   --> src/liqiu2.rs:299:8
+    |
+299 | pub fn LQ66190_increment_stat(index: u32) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `lq66190_increment_stat`
+
+warning: function `LQ55120_read_user_string` should have a snake case name
+   --> src/liqiu2.rs:306:8
+    |
+306 | pub fn LQ55120_read_user_string(ptr: *mut u8, buf: &mut [u8; 256]) -> usize {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `lq55120_read_user_string`
+
+warning: function `LQ99421_trace_mount` should have a snake case name
+   --> src/liqiu2.rs:335:8
+    |
+335 | pub fn LQ99421_trace_mount(ctx: TracePointContext) -> u32 {
+    |        ^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `lq99421_trace_mount`
+
+warning: function `LQ66182_trace_execve` should have a snake case name
+   --> src/liqiu2.rs:342:8
+    |
+342 | pub fn LQ66182_trace_execve(ctx: TracePointContext) -> u32 {
+    |        ^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `lq66182_trace_execve`
+
+warning: function `LQ55307_trace_openat` should have a snake case name
+   --> src/liqiu2.rs:349:8
+    |
+349 | pub fn LQ55307_trace_openat(ctx: TracePointContext) -> u32 {
+    |        ^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `lq55307_trace_openat`
+
+warning: function `LQ99812_tracepoint_sched` should have a snake case name
+   --> src/liqiu2.rs:356:8
+    |
+356 | pub fn LQ99812_tracepoint_sched(ctx: TracePointContext) -> u32 {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `lq99812_tracepoint_sched`
+
+warning: function `LQ44219_panic` should have a snake case name
+   --> src/liqiu2.rs:361:4
+    |
+361 | fn LQ44219_panic(_info: &core::panic::PanicInfo) -> ! {
+    |    ^^^^^^^^^^^^^ help: convert the identifier to snake case: `lq44219_panic`
+
+warning: function `LQ88341_is_suspicious_target` should have a snake case name
+  --> src/liqiu2.rs:84:8
+   |
+84 |     fn LQ88341_is_suspicious_target(buf: &[u8]) -> bool {
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `lq88341_is_suspicious_target`
+
+warning: function `LQ44763_handle_mount` should have a snake case name
+   --> src/liqiu2.rs:104:12
+    |
+104 |     pub fn LQ44763_handle_mount(ctx: &TracePointContext) -> Result<(), i64> {
+    |            ^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `lq44763_handle_mount`
+
+warning: function `LQ88342_is_suspicious_binary` should have a snake case name
+   --> src/liqiu2.rs:155:8
+    |
+155 |     fn LQ88342_is_suspicious_binary(buf: &[u8]) -> bool {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `lq88342_is_suspicious_binary`
+
+warning: function `LQ22594_handle_execve` should have a snake case name
+   --> src/liqiu2.rs:175:12
+    |
+175 |     pub fn LQ22594_handle_execve(ctx: &TracePointContext) -> Result<(), i64> {
+    |            ^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `lq22594_handle_execve`
+
+warning: function `LQ88343_is_sensitive_path` should have a snake case name
+   --> src/liqiu2.rs:227:8
+    |
+227 |     fn LQ88343_is_sensitive_path(buf: &[u8]) -> bool {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `lq88343_is_sensitive_path`
+
+warning: function `LQ77841_handle_openat` should have a snake case name
+   --> src/liqiu2.rs:247:12
+    |
+247 |     pub fn LQ77841_handle_openat(ctx: &TracePointContext) -> Result<(), i64> {
+    |            ^^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `lq77841_handle_openat`
+
+warning: linker stderr: unable to open LLVM shared lib /home/liqiu/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/libLLVM-23-rust-1.99.0-nightly.so: dlopen failed
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `ablock-ebpf` (bin "ablock") generated 18 warnings
+    Finished `release` profile [optimized] target(s) in 12.29s

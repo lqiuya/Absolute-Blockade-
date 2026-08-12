@@ -1,0 +1,40 @@
+[package]
+name = "ablock"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+# ebpf/ 是独立的no_std crate，由build.rs单独编译，排除出workspace避免target冲突
+exclude = ["ebpf"]
+
+[dependencies]
+aya = { version = "0.13", features = ["async_tokio"] }
+aya-log = "0.2"
+tokio = { version = "1", features = ["full"] }
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+crossterm = "0.27"
+chrono = "0.4"
+# liqiu1.rs 读取PerfEventArray时需要BytesMut缓冲区
+bytes = "1"
+axum = "0.7"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "fs"] }
+serde_json = "1"
+
+# liqiu3.rs 外部通信依赖（可选feature）
+# 注: tokio-grpc在crates.io仅0.0.0不可用，替换为tonic（标准gRPC库）
+tonic = { version = "0.10", optional = true }
+reqwest = { version = "0.11", optional = true }
+
+[features]
+default = []
+falco = ["tonic"]
+trivy = ["reqwest"]
+
+[build-dependencies]
+# build.rs 使用标准库cargo命令编译eBPF，无需额外构建依赖

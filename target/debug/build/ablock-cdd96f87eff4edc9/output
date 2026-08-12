@@ -1,0 +1,3 @@
+cargo:rustc-env=ABLOCK_EBPF_PATH=/home/liqiu/rust/ablock-semi-finished/ebpf/target/bpfel-unknown-none/release/ablock
+cargo:rerun-if-changed=ebpf/src/liqiu2.rs
+cargo:rerun-if-changed=ebpf/Cargo.toml

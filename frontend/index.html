@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ablock - 容器运行时安全代理，基于Falco的实时威胁检测与自动响应系统">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>ablock | 容器安全代理</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #050810;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      overflow-x: hidden;
+    }
+
+    #app { min-height: 100vh; }
+
+    /* ========== Loading 动画 ========== */
+    .loading {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #050810;
+      z-index: 9999;
+      transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .loading.hidden { 
+      opacity: 0; 
+      pointer-events: none; 
+    }
+
+    /* 核心六边形盾徽 */
+    .loading-shield {
+      width: 72px;
+      height: 72px;
+      position: relative;
+    }
+
+    .loading-shield svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .shield-hex {
+      stroke: #3b82f6;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      animation: hexPulse 2s ease-in-out infinite;
+    }
+
+    .shield-inner {
+      stroke: #60a5fa;
+      stroke-width: 1.5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      animation: hexPulse 2s ease-in-out 0.3s infinite;
+    }
+
+    .shield-dot {
+      fill: #3b82f6;
+      animation: dotBlink 1.5s ease-in-out infinite;
+    }
+
+    @keyframes hexPulse {
+      0%, 100% { 
+        opacity: 1; 
+        transform-origin: center;
+        transform: scale(1); 
+      }
+      50% { 
+        opacity: 0.5; 
+        transform: scale(0.92); 
+      }
+    }
+
+    @keyframes dotBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* 扫描线 */
+    .scan-line {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 120px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.6), transparent);
+      transform: translate(-50%, -50%);
+      animation: scanSweep 2.5s ease-in-out infinite;
+    }
+
+    @keyframes scanSweep {
+      0% { transform: translate(-50%, -50%) rotate(0deg); opacity: 0; }
+      20% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { transform: translate(-50%, -50%) rotate(360deg); opacity: 0; }
+    }
+
+    /* 文字区域 */
+    .loading-text {
+      margin-top: 32px;
+      color: #64748b;
+      font-size: 13px;
+      letter-spacing: 3px;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .loading-brand {
+      margin-top: 8px;
+      color: #94a3b8;
+      font-size: 11px;
+      letter-spacing: 6px;
+      font-weight: 400;
+    }
+
+    .loading-dots::after {
+      content: '';
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0% { content: ''; }
+      25% { content: '.'; }
+      50% { content: '..'; }
+      75% { content: '...'; }
+    }
+
+    /* 状态指示器 */
+    .loading-status {
+      margin-top: 20px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .status-bar {
+      width: 32px;
+      height: 3px;
+      border-radius: 2px;
+      background: #1e293b;
+      overflow: hidden;
+    }
+
+    .status-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      border-radius: 2px;
+      animation: statusFill 2s ease-in-out infinite;
+    }
+
+    .status-bar:nth-child(2) .status-bar-fill { animation-delay: 0.2s; }
+    .status-bar:nth-child(3) .status-bar-fill { animation-delay: 0.4s; }
+    .status-bar:nth-child(4) .status-bar-fill { animation-delay: 0.6s; }
+    .status-bar:nth-child(5) .status-bar-fill { animation-delay: 0.8s; }
+
+    @keyframes statusFill {
+      0% { width: 0%; opacity: 0.3; }
+      50% { width: 100%; opacity: 1; }
+      100% { width: 100%; opacity: 0.3; }
+    }
+
+    /* 底部装饰线 */
+    .loading-footer {
+      position: absolute;
+      bottom: 40px;
+      color: #334155;
+      font-size: 10px;
+      letter-spacing: 2px;
+    }
+
+    .loading-footer::before,
+    .loading-footer::after {
+      content: '';
+      display: inline-block;
+      width: 40px;
+      height: 1px;
+      background: #1e293b;
+      vertical-align: middle;
+      margin: 0 12px;
+    }
+  </style>
+<base target="_blank">
+</head>
+<body>
+  <div id="app">
+    <div class="loading" id="loading">
+      <!-- 盾徽 -->
+      <div class="loading-shield">
+        <svg viewBox="0 0 72 72">
+          <!-- 外六边形 -->
+          <polygon class="shield-hex" 
+            points="36,4 64,20 64,52 36,68 8,52 8,20" />
+          <!-- 内六边形 -->
+          <polygon class="shield-inner" 
+            points="36,14 56,26 56,46 36,58 16,46 16,26" />
+          <!-- 中心点 -->
+          <circle class="shield-dot" cx="36" cy="36" r="3" />
+        </svg>
+        <!-- 扫描线 -->
+        <div class="scan-line"></div>
+      </div>
+
+      <!-- 文字 -->
+      <div class="loading-text">ablock 初始化中<span class="loading-dots"></span></div>
+      <div class="loading-brand">CONTAINER SECURITY AGENT</div>
+
+      <!-- 状态条 -->
+      <div class="loading-status">
+        <div class="status-bar"><div class="status-bar-fill"></div></div>
+        <div class="status-bar"><div class="status-bar-fill"></div></div>
+        <div class="status-bar"><div class="status-bar-fill"></div></div>
+        <div class="status-bar"><div class="status-bar-fill"></div></div>
+        <div class="status-bar"><div class="status-bar-fill"></div></div>
+      </div>
+
+      <!-- 底部 -->
+      <div class="loading-footer">v2.0.0</div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+  <script>
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const el = document.getElementById('loading');
+        if (el) el.classList.add('hidden');
+      }, 300);
+    });
+  </script>
+</body>
+</html>
